@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Comparator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #007BFF;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #inputContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .inputBox {
+            width: 60%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #resultTable {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #resultTable th, #resultTable td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        #resultTable th {
+            background-color: #007BFF;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Styling for row colors based on matching status */
+        .Matching {
+            background-color: #c8e6c9; /* Light green for matching rows */
+        }
+
+        .NotMatching {
+            background-color: #ffcdd2; /* Light red for non-matching rows */
+        }
+
+        .PresentInFirst, .PresentInSecond {
+            background-color: #e0e0e0; /* Light grey for rows present in only one input */
+        }
+    </style>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        function compareKeyValues() {
+            var input1 = document.getElementById("input1").value;
+            var input2 = document.getElementById("input2").value;
+
+            var resultTable = document.getElementById("resultTable");
+
+            var regex = /<([^>\s]+)([^>]*)>(.*?)<\/\1>/g;
+
+            var matches1 = input1.match(regex);
+            var matches2 = input2.match(regex);
+
+            if (!matches1 || !matches2) {
+                resultTable.innerHTML = "Invalid input. Please enter valid key-value pairs within < >.";
+                return;
+            }
+
+            var keyValues1 = extractKeyValues(matches1);
+            var keyValues2 = extractKeyValues(matches2);
+
+            var allKeys = new Set([...Object.keys(keyValues1), ...Object.keys(keyValues2)]);
+
+            var comparisonResult = "<strong>Comparison Result:</strong><br>";
+
+            comparisonResult += "<table id='resultTable'>";
+            comparisonResult += "<tr><th>Tag Name</th><th>Attribute</th><th>Value in Input 1</th><th>Value in Input 2</th><th>Matching Status</th></tr>";
+
+            allKeys.forEach(function (tag) {
+                var values1 = keyValues1[tag] || {};
+                var values2 = keyValues2[tag] || {};
+
+                var attributeKeys = new Set([...Object.keys(values1), ...Object.keys(values2)]);
+
+                attributeKeys.forEach(function (attribute) {
+                    var value1 = values1[attribute] || "NA";
+                    var value2 = values2[attribute] || "NA";
+
+                    var status;
+                    if (value1 === value2) {
+                        status = "Matching";
+                    } else if (values1.hasOwnProperty(attribute) && values2.hasOwnProperty(attribute)) {
+                        status = "Not Matching";
+                    } else {
+                        status = values1.hasOwnProperty(attribute) ? "Not present in 2" : "Not present in 1";
+                    }
+
+                    var rowClass;
+                    if (status === "Matching") {
+                        rowClass = "Matching";
+                    } else if (status.startsWith("Not present")) {
+                        rowClass = "NotMatching";
+                    } else {
+                        rowClass = "PresentInFirst"; // Default to PresentInFirst for now
+                    }
+
+                    comparisonResult += `<tr class='${rowClass}'>
+                        <td>${tag}</td>
+                        <td>${attribute}</td>
+                        <td>${value1}</td>
+                        <td>${value2}</td>
+                        <td>${status}</td>
+                    </tr>`;
+                });
+            });
+
+            comparisonResult += "</table>";
+
+            resultTable.innerHTML = comparisonResult;
+        }
+
+        function extractKeyValues(matches) {
+            var keyValues = {};
+
+            matches.forEach(function (match) {
+                var tagMatch = match.match(/<([^>\s]+)([^>]*)>(.*?)<\/\1>/);
+
+                if (tagMatch) {
+                    var tag = tagMatch[1];
+                    var attributes = tagMatch[2];
+                    var content = tagMatch[3];
+
+                    keyValues[tag] = {};
+
+                    // Extracting attributes
+                    var attributeRegex = /(\S+)\s*=\s*"([^"]*)"/g;
+                    var attributeMatch;
+
+                    while ((attributeMatch = attributeRegex.exec(attributes)) !== null) {
+                        var attributeName = attributeMatch[1];
+                        var attributeValue = attributeMatch[2];
+                        keyValues[tag][attributeName] = attributeValue;
+                    }
+
+                    // Extracting content if present
+                    keyValues[tag]["content"] = content.trim();
+                }
+            });
+
+            return keyValues;
+        }
+
+        function takeScreenshot() {
+            html2canvas(document.getElementById("resultTable")).then(function (canvas) {
+                var link = document.createElement("a");
+                document.body.appendChild(link);
+                link.href = canvas.toDataURL("image/png");
+                link.download = "screenshot.png";
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Message Comparator</h1>
+
+    <div id="inputContainer">
+        <label for="input1">Enter Input 1:</label>
+        <input class="inputBox" type="text" id="input1" placeholder='<MIKxeraty mogType="A" Publishlook="X" LookingType="34"> </MIKxeraty>'>
+
+        <label for="input2">Enter Input 2:</label>
+        <input class="inputBox" type="text" id="input2" placeholder='<MIKxeraty mogType="B" Publishlook="X" LookingType="34"> </MIKxeraty>'>
+    </div>
+
+    <button onclick="compareKeyValues()">Compare Key-Value Pairs</button>
+    <button onclick="takeScreenshot()">Take Screenshot</button>
+
+    <div id="resultTable"></div>
+
+</body>
+</html>
