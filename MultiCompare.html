@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Comparator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        td:nth-child(4) {
+            font-weight: bold;
+        }
+        .matching {
+            background-color: #c8e6c9;
+        }
+        .not-matching {
+            background-color: #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+
+<div style="text-align: center;">
+    <h2>Message Comparator</h2>
+
+    <label for="message1">Message 1:</label>
+    <textarea id="message1" rows="4" cols="50" placeholder="Enter message in the format { BeginString[8]=\"Fix.4.2\", BodyLength[9]=\"226\", MsgType[35]=\"D\" }"></textarea>
+
+    <label for="message2">Message 2:</label>
+    <textarea id="message2" rows="4" cols="50" placeholder="Enter message in the format { BeginString[8]=\"Fix.4.2\", BodyLength[9]=\"226\", MsgType[35]=\"D\" }"></textarea>
+
+    <button onclick="compareMessages()">Compare Messages</button>
+</div>
+
+<table id="resultTable">
+    <thead>
+        <tr>
+            <th>Parameter</th>
+            <th>Value in Message 1</th>
+            <th>Value in Message 2</th>
+            <th>Remark</th>
+        </tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+</table>
+
+<script>
+    function compareMessages() {
+        const message1 = document.getElementById('message1').value;
+        const message2 = document.getElementById('message2').value;
+
+        const params1 = extractParams(message1);
+        const params2 = extractParams(message2);
+
+        const tableBody = document.getElementById('resultBody');
+        tableBody.innerHTML = '';
+
+        const allParams = Array.from(new Set([...Object.keys(params1), ...Object.keys(params2)]));
+
+        allParams.forEach(param => {
+            const row = tableBody.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            const cell3 = row.insertCell(2);
+            const cell4 = row.insertCell(3);
+
+            cell1.textContent = param;
+            cell2.textContent = params1[param] || 'Not present in Message 1';
+            cell3.textContent = params2[param] || 'Not present in Message 2';
+
+            if (params1[param] === params2[param]) {
+                cell4.textContent = 'Matching';
+                row.className = 'matching';
+            } else {
+                cell4.textContent = 'Not Matching';
+                row.className = 'not-matching';
+            }
+        });
+    }
+
+    function extractParams(message) {
+        const params = {};
+        const matches = message.match(/(\S+)\[([\d\w]+)\]="([^"]+)"/g);
+
+        if (matches) {
+            matches.forEach(match => {
+                const [_, param, index, value] = match.match(/(\S+)\[([\d\w]+)\]="([^"]+)"/);
+                params[param + '[' + index + ']'] = value;
+            });
+        }
+
+        return params;
+    }
+</script>
+
+</body>
+</html>
