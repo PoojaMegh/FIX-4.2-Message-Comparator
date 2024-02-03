@@ -121,6 +121,7 @@
         <button onclick="exportToPDF()">Export to PDF</button>
         <button onclick="exportToCSV()">Export to CSV</button>
         <button onclick="mergeTables()">Merge Tables</button>
+        <button onclick="transposeAndMergeTables()">Transpose and Merge Tables</button>
         <div class="resultTables" id="resultTables"></div>
     </div>
 
@@ -246,6 +247,7 @@
             for (var i = 0; i < tables.length; i++) {
                 var rows = tables[i].querySelectorAll("tr");
                 for (var j = 0; j < rows.length; j++) {
+                    if (j === 0) continue; // Skip the header row
                     var row = [], cols = rows[j].querySelectorAll("td, th");
                     for (var k = 0; k < cols.length; k++) {
                         row.push(cols[k].innerText);
@@ -291,6 +293,66 @@
             // Replace the existing resultTables content with the merged table
             resultTables.innerHTML = '';
             resultTables.appendChild(mergedTable);
+        }
+
+        function transposeAndMergeTables() {
+            var resultTables = document.getElementById("resultTables");
+            var allTables = document.querySelectorAll(".resultTable");
+            var transposedTables = [];
+
+            allTables.forEach(function(table) {
+                var transposedTable = transposeTable(table);
+                transposedTables.push(transposedTable);
+            });
+
+            // Merge transposed tables
+            var mergedTable = mergeTransposedTables(transposedTables);
+
+            // Replace the existing resultTables content with the merged table
+            resultTables.innerHTML = '';
+            resultTables.appendChild(mergedTable);
+        }
+
+        function transposeTable(table) {
+            var transposedTable = document.createElement("table");
+            var rows = table.querySelectorAll("tr");
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].querySelectorAll("td, th");
+                if (i === 0) continue; // Skip the header row
+                for (var j = 0; j < cells.length; j++) {
+                    if (j === 0) continue; // Skip the first column
+                    if (!transposedTable.rows[j - 1]) {
+                        transposedTable.insertRow(j - 1);
+                    }
+                    var newCell = transposedTable.rows[j - 1].insertCell();
+                    newCell.textContent = cells[j].textContent;
+                }
+            }
+            return transposedTable;
+        }
+
+
+        function mergeTransposedTables(transposedTables) {
+            var mergedTable = document.createElement("table");
+            mergedTable.className = "resultTable";
+
+            // Create the header row
+            var headerRow = document.createElement("tr");
+            headerRow.innerHTML = "<th>Tag</th><th>Value in Message 1</th><th>Value in Message 2</th><th>Result</th>";
+            mergedTable.appendChild(headerRow);
+
+            // Iterate over each transposed table and copy rows to the merged table
+            transposedTables.forEach(function(transposedTable) {
+                var rows = transposedTable.querySelectorAll("tr");
+                for (var i = 0; i < rows.length; i++) {
+                    var newRow = document.createElement("tr");
+                    newRow.innerHTML = rows[i].innerHTML;
+                    newRow.className = rows[i].className; // Preserve the CSS class
+                    mergedTable.appendChild(newRow);
+                }
+            });
+
+            return mergedTable;
         }
     </script>
 </body>
