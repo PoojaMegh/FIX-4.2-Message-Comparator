@@ -120,12 +120,15 @@
         <button onclick="exportToJPEG()">Export to JPEG</button>
         <button onclick="exportToPDF()">Export to PDF</button>
         <button onclick="exportToCSV()">Export to CSV</button>
+        <button onclick="mergeTables()">Merge Tables</button>
         <div class="resultTables" id="resultTables"></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
     <script>
+        // Your existing JavaScript code
+        
         function compareMessages() {
             var separator = document.getElementById("separator").value.trim();
             var fixMessages1 = document.getElementById("fixMessages1").value.trim();
@@ -155,6 +158,21 @@
                 var tags1 = extractTagsAndValues(message1, separator);
                 var tags2 = extractTagsAndValues(message2, separator);
 
+                var subHeading1 = getSubHeading(tags1);
+                var subHeading2 = getSubHeading(tags2);
+
+                if (subHeading1) {
+                    var caption = document.createElement('caption');
+                    caption.textContent = subHeading1;
+                    resultTable.appendChild(caption);
+                }
+
+                if (subHeading2 && subHeading2 !== subHeading1) {
+                    var caption = document.createElement('caption');
+                    caption.textContent = subHeading2;
+                    resultTable.appendChild(caption);
+                }
+
                 var allTags = new Set([...tags1.keys(), ...tags2.keys()]);
 
                 allTags.forEach(function(tag) {
@@ -182,6 +200,27 @@
                 }
             });
             return tags;
+        }
+
+        function getSubHeading(tags) {
+            var tag35 = tags.get("35");
+            var tag39 = tags.get("39");
+
+            if (tag35 === "D") {
+                return "New Single Order";
+            } else if (tag35 === "F") {
+                return "Cancel Order";
+            } else if (tag35 === "8") {
+                if (tag39 === "0") {
+                    return "Execution Ack Report Order";
+                } else if (tag39 === "1") {
+                    return "Execution Partial Fill Report Order";
+                } else if (tag39 === "2") {
+                    return "Execution FullFill Report Order";
+                }
+            }
+
+            return "";
         }
 
         function exportToJPEG() {
@@ -225,6 +264,33 @@
                 document.body.appendChild(link);
                 link.click();
             }
+        }
+
+        function mergeTables() {
+            var resultTables = document.getElementById("resultTables");
+            var allTables = document.querySelectorAll(".resultTable");
+            var mergedTable = document.createElement("table");
+            mergedTable.className = "resultTable";
+
+            // Create the header row
+            var headerRow = document.createElement("tr");
+            headerRow.innerHTML = "<th>Tag</th><th>Value in Message 1</th><th>Value in Message 2</th><th>Result</th>";
+            mergedTable.appendChild(headerRow);
+
+            // Iterate over each table and copy rows to the merged table
+            allTables.forEach(function(table) {
+                var rows = table.querySelectorAll("tr");
+                for (var i = 1; i < rows.length; i++) { // Start from index 1 to skip the header row
+                    var newRow = document.createElement("tr");
+                    newRow.innerHTML = rows[i].innerHTML;
+                    newRow.className = rows[i].className; // Preserve the CSS class
+                    mergedTable.appendChild(newRow);
+                }
+            });
+
+            // Replace the existing resultTables content with the merged table
+            resultTables.innerHTML = '';
+            resultTables.appendChild(mergedTable);
         }
     </script>
 </body>
