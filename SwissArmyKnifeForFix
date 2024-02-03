@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIX Message Comparator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+
+        h1, .resultTable th {
+            color: #007bff; /* blue */
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .resultTables {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .resultTable {
+            border-collapse: collapse;
+            width: 45%;
+            margin-bottom: 20px;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .resultTable th, .resultTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .resultTable th {
+            background-color: #f2f2f2;
+            color: #007bff; /* blue */
+        }
+
+        .match {
+            background-color: #aaffaa; /* green */
+        }
+
+        .mismatch {
+            background-color: #ffaaaa; /* red */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FIX Message Comparator</h1>
+        <div class="input-group">
+            <label for="separator">Separator (leave blank for default " "):</label>
+            <input type="text" id="separator" placeholder="Enter separator...">
+        </div>
+        <div class="input-group">
+            <label for="fixMessages1">FIX Messages 1:</label>
+            <textarea id="fixMessages1" rows="5" cols="50"></textarea>
+        </div>
+        <div class="input-group">
+            <label for="fixMessages2">FIX Messages 2:</label>
+            <textarea id="fixMessages2" rows="5" cols="50"></textarea>
+        </div>
+        <button onclick="compareMessages()">Compare Messages</button>
+        <button onclick="exportToJPEG()">Export to JPEG</button>
+        <button onclick="exportToPDF()">Export to PDF</button>
+        <button onclick="exportToCSV()">Export to CSV</button>
+        <div class="resultTables" id="resultTables"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script>
+        function compareMessages() {
+            var separator = document.getElementById("separator").value.trim();
+            var fixMessages1 = document.getElementById("fixMessages1").value.trim();
+            var fixMessages2 = document.getElementById("fixMessages2").value.trim();
+
+            if (!separator) {
+                alert("No separator provided. Using default separator: ' ' (space).");
+                separator = " ";
+            }
+
+            var messages1 = fixMessages1.split("\n");
+            var messages2 = fixMessages2.split("\n");
+
+            var numMessages = Math.max(messages1.length, messages2.length);
+
+            var resultTables = document.getElementById("resultTables");
+            resultTables.innerHTML = '';
+
+            for (var i = 0; i < numMessages; i++) {
+                var message1 = messages1[i] || "";
+                var message2 = messages2[i] || "";
+
+                var resultTable = document.createElement('table');
+                resultTable.className = 'resultTable';
+                resultTable.innerHTML = "<tr><th colspan='4'>Comparison Result - Message " + (i + 1) + "</th></tr><tr><th>Tag</th><th>Value in Message 1</th><th>Value in Message 2</th><th>Result</th></tr>";
+
+                var tags1 = extractTagsAndValues(message1, separator);
+                var tags2 = extractTagsAndValues(message2, separator);
+
+                var allTags = new Set([...tags1.keys(), ...tags2.keys()]);
+
+                allTags.forEach(function(tag) {
+                    var value1 = tags1.get(tag) || "";
+                    var value2 = tags2.get(tag) || "";
+                    var resultClass = (value1 === value2) ? "match" : "mismatch";
+
+                    var row = document.createElement('tr');
+                    row.className = resultClass;
+                    row.innerHTML = "<td>" + tag + "</td><td>" + value1 + "</td><td>" + value2 + "</td><td>" + (value1 === value2 ? "Match" : "Mismatch") + "</td>";
+                    resultTable.appendChild(row);
+                });
+
+                resultTables.appendChild(resultTable);
+            }
+        }
+
+        function extractTagsAndValues(fixMessage, separator) {
+            var tags = new Map();
+            var fields = fixMessage.split(separator);
+            fields.forEach(function(field) {
+                var parts = field.split("=");
+                if (parts.length === 2) {
+                    tags.set(parts[0], parts[1]);
+                }
+            });
+            return tags;
+        }
+
+        function exportToJPEG() {
+            html2canvas(document.getElementById('resultTables')).then(function(canvas) {
+                var jpegImage = canvas.toDataURL("image/jpeg");
+                var a = document.createElement('a');
+                a.href = jpegImage;
+                a.download = 'fix_comparison.jpeg';
+                a.click();
+            });
+        }
+
+        function exportToPDF() {
+            var element = document.getElementById('resultTables');
+            html2pdf()
+                .from(element)
+                .save('fix_comparison.pdf');
+        }
+
+        function exportToCSV() {
+            var csvContent = [];
+            var tables = document.getElementsByClassName('resultTable');
+            for (var i = 0; i < tables.length; i++) {
+                var rows = tables[i].querySelectorAll("tr");
+                for (var j = 0; j < rows.length; j++) {
+                    var row = [], cols = rows[j].querySelectorAll("td, th");
+                    for (var k = 0; k < cols.length; k++) {
+                        row.push(cols[k].innerText);
+                    }
+                    csvContent.push(row.join(","));
+                }
+            }
+            var csv = csvContent.join("\n");
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement("a");
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, 'fix_comparison.csv');
+            } else {
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'fix_comparison.csv');
+                document.body.appendChild(link);
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>
