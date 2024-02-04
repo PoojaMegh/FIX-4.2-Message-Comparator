@@ -71,15 +71,18 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
+            overflow-x: auto; /* Add horizontal scrolling */
+            white-space: nowrap; /* Prevent line breaks in table rows */
         }
-
         .resultTable {
             border-collapse: collapse;
-            width: 45%;
+            width: auto; /* Set width to auto to allow table to expand */
             margin-bottom: 20px;
             display: inline-block;
             vertical-align: top;
+            white-space: normal; /* Reset white-space to allow text wrapping within cells */
         }
+
 
         .resultTable th, .resultTable td {
             border: 1px solid #ddd;
