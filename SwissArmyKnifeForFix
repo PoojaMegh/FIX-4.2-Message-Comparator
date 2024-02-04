@@ -75,7 +75,7 @@
             white-space: nowrap; /* Prevent line breaks in table rows */
         }
         .resultTable {
-            border-collapse: collapse;
+            border: 1px solid #000; /* Add borders to cells */
             width: auto; /* Set width to auto to allow table to expand */
             margin-bottom: 20px;
             display: inline-block;
@@ -84,11 +84,13 @@
         }
 
 
-        .resultTable th, .resultTable td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
+		.resultTable th, .resultTable td {
+			border: 1px solid #000; /* Black borders */
+			padding: 8px;
+			text-align: left;
+			white-space: pre-wrap;
+			min-width: 150px;
+		}
 
         .resultTable th {
             background-color: #f2f2f2;
