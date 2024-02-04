@@ -300,23 +300,38 @@
             resultTables.appendChild(mergedTable);
         }
 
-        function transposeAndMergeTables() {
-            var resultTables = document.getElementById("resultTables");
-            var allTables = document.querySelectorAll(".resultTable");
-            var transposedTables = [];
+	function transposeAndMergeTables() {
+	    var resultTables = document.getElementById("resultTables");
+	    var allTables = document.querySelectorAll(".resultTable");
+	    var transposedTables = [];
+	
+	    allTables.forEach(function(table) {
+	        var transposedTable = transposeTable(table);
+	        transposedTables.push(transposedTable);
+	    });
+	
+	    // Merge transposed tables
+	    var mergedTable = mergeTransposedTables(transposedTables);
+	
+	    // Mark cells with value "Mismatch" as red
+	    markMismatchCellsRed(mergedTable);
+	
+	    // Replace the existing resultTables content with the merged table
+	    resultTables.innerHTML = '';
+	    resultTables.appendChild(mergedTable);
+	}
 
-            allTables.forEach(function(table) {
-                var transposedTable = transposeTable(table);
-                transposedTables.push(transposedTable);
-            });
-
-            // Merge transposed tables
-            var mergedTable = mergeTransposedTables(transposedTables);
-
-            // Replace the existing resultTables content with the merged table
-            resultTables.innerHTML = '';
-            resultTables.appendChild(mergedTable);
-        }
+	function markMismatchCellsRed(table) {
+	    var rows = table.querySelectorAll("tr");
+	    for (var i = 0; i < rows.length; i++) {
+	        var cells = rows[i].querySelectorAll("td");
+	        for (var j = 0; j < cells.length; j++) {
+	            if (cells[j].textContent.trim() === "Mismatch") {
+	                cells[j].classList.add("mismatch");
+	            }
+	        }
+	    }
+	}
 
         function transposeTable(table) {
             var transposedTable = document.createElement("table");
