@@ -115,11 +115,11 @@
         </div>
         <div class="input-group">
             <label for="fixMessages1">FIX Messages 1:</label>
-            <textarea id="fixMessages1" rows="5" cols="50"></textarea>
+            <textarea id="fixMessages1" rows="5" cols="50" placeholder='Example if space is separtor : abc="asd" cde="34" efg="asdf"'></textarea>
         </div>
         <div class="input-group">
             <label for="fixMessages2">FIX Messages 2:</label>
-            <textarea id="fixMessages2" rows="5" cols="50"></textarea>
+            <textarea id="fixMessages2" rows="5" cols="50" placeholder='Example if space is separtor : abc="asd" cde="34" efg="asdf"'></textarea>
         </div>
         <button onclick="compareMessages()">Compare Messages</button>
         <button onclick="exportToJPEG()">Export to JPEG</button>
